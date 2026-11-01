@@ -9,7 +9,7 @@ updated as evaluation follow-up issues are completed.
 | Product specification | Complete | `_docs/plan.md`, `_docs/tasks.md`, and the public GitHub issue tracker. |
 | Agent team specification | Complete | `_docs/process.md` and `_docs/team/`. |
 | Context management | Complete | `AGENTS.MD` links to modular project documentation. |
-| Application | Complete locally | SQLite persistence is connected to the review route; see #20 and `src/server/card-repository.ts`. |
+| Application | Complete locally | SQLite persistence is connected to the review route; see #20 and `frontend/src/server/card-repository.ts`. |
 | Testing | Complete locally | 27 unit/integration-style tests pass with `npm test`; persistence restart coverage is in #20. |
 | Containerization | Complete locally | Dockerfile, Compose volume, health check, and smoke-tested image are in #21. |
 | Deployment | Blocked | #22 contains versioned GHCR publishing, a deployment hook, and rollback workflow, but no hosting target or deployment secret is configured. |
@@ -21,10 +21,10 @@ updated as evaluation follow-up issues are completed.
 ## Verification commands
 
 ```bash
-npm install
-npm test
-npm run generate-routes
-npm run build
+npm --prefix frontend install
+npm --prefix frontend test
+npm --prefix frontend run generate-routes
+npm --prefix frontend run build
 ```
 
 The scorecard should be updated with links to deployment, dashboards, alert

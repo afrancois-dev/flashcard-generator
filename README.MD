@@ -6,10 +6,14 @@ and cloze cards, then export them as CSV, TXT, or an Anki `.apkg` package.
 
 ## Architecture
 
-- **Frontend:** React with TanStack Start, TanStack Router, TanStack Table, and
-  client-side review state.
+- **Frontend:** The root `frontend/` directory contains the React application
+  with TanStack Start, TanStack Router, TanStack Table, and client-side review
+  state.
 - **Server boundary:** TanStack server functions for AI calls, document
   extraction, URL fetching, validation, and refinement.
+- **Python boundary:** A root FastAPI service provides the operational
+  `/health` contract on port `8000`; it does not duplicate current product
+  behavior.
 - **Shared domain:** Zod-validated basic and cloze card contracts.
 - **Exports:** Browser-side CSV/TXT and APKG generation.
 
@@ -22,19 +26,37 @@ evaluation follow-up issues.
 Requirements: Node.js 20 or newer and npm.
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+The FastAPI operational boundary is optional for the TanStack UI and runs
+independently:
+
+```bash
+python -m pip install -e "backend[test]"
+python -m uvicorn backend.app:app --reload --port 8000
+```
+
+Check [http://localhost:8000/health](http://localhost:8000/health). Its
+documented response and ownership boundaries are in
+[_docs/backend-architecture.md](_docs/backend-architecture.md).
+
 Run the validation suite and production build:
 
 ```bash
-npm test
-npm run generate-routes
-npm run build
+npm --prefix frontend test
+npm --prefix frontend run generate-routes
+npm --prefix frontend run build
+npm --prefix frontend run validate-openapi
 ```
+
+`npm --prefix frontend run generate-routes` discovers routes in `frontend/src/routes` and writes
+`frontend/src/routeTree.gen.ts`. The OpenAPI check is deterministic and uses
+the repository's Node toolchain without network access or credentials.
 
 Run the complete containerized application with persistent SQLite storage:
 
@@ -72,6 +94,8 @@ environment. Never commit these values or send source content to telemetry.
 - [Implementation tasks](_docs/tasks.md)
 - [Evaluation criteria](_docs/evaluation_criteria.md)
 - [Evaluation scorecard](_docs/evaluation-scorecard.md)
+- [Backend architecture and ownership](_docs/backend-architecture.md)
+- [OpenAPI contract](backend/openapi.yaml)
 - [Public GitHub issue tracker](https://github.com/afrancois-dev/flashcard-generator/issues)
 - [Contributor instructions](AGENTS.MD)
 

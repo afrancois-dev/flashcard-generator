@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flashcard-generator-backend"
+version = "0.1.0"
+description = "Operational FastAPI boundary for Flashcard Generator"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+]
+
+[project.optional-dependencies]
+test = [
+  "httpx>=0.27,<1",
+  "pytest>=8,<9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test_app.py"]
+
+[tool.setuptools]
+py-modules = ["app"]

@@ -1,0 +1,93 @@
+openapi: 3.0.3
+info:
+  title: Flashcard Generator FastAPI Operational API
+  version: 0.1.0
+  description: >-
+    The operational boundary for the separate FastAPI service. Product
+    operations remain owned by TanStack server functions.
+servers:
+  - url: http://localhost:8000
+    description: Local FastAPI service
+paths:
+  /health:
+    get:
+      summary: Check backend availability
+      operationId: getHealth
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthResponse'
+        '500':
+          $ref: '#/components/responses/UnexpectedFailure'
+components:
+  parameters:
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      description: >-
+        A caller-provided correlation ID. Values with 1–128 ASCII letters,
+        digits, '.', '_', ':', or '-' are valid and are echoed. Missing or
+        invalid values are replaced with a generated ID.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: '^[A-Za-z0-9._:-]{1,128}$'
+  schemas:
+    Health:
+      type: object
+      required:
+        - status
+        - service
+        - correlation_id
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+          enum:
+            - flashcard-generator-fastapi
+        correlation_id:
+          type: string
+          description: The echoed or generated correlation ID.
+    Error:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+  responses:
+    HealthResponse:
+      description: The backend is available.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/CorrelationId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Health'
+          example:
+            status: ok
+            service: flashcard-generator-fastapi
+            correlation_id: request-123
+    UnexpectedFailure:
+      description: Unexpected service failure.
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/CorrelationId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  headers:
+    CorrelationId:
+      description: The echoed or generated correlation ID for this request.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128

@@ -1,0 +1,3 @@
+export const MAX_SOURCE_CHARS = 100_000
+export const MAX_UPLOAD_BYTES = 10_000_000
+export const MAX_FETCHED_HTML_CHARS = 2_000_000
