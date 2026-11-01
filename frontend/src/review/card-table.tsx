@@ -69,15 +69,15 @@ export function CardTable({
   })
 
   return (
-    <div>
+    <div className="stack">
       <label htmlFor="card-filter">Filter cards</label>
-      <input
+      <input className="field"
         id="card-filter"
         onChange={(event) => setGlobalFilter(event.target.value)}
         placeholder="Search cards"
         value={globalFilter}
       />
-      <table>
+      <div className="data-table-wrap"><table>
         <caption>Flashcard review summary</caption>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -85,7 +85,7 @@ export function CardTable({
               {headerGroup.headers.map((header) => (
                 <th key={header.id} scope="col">
                   {header.isPlaceholder ? null : (
-                    <button
+                    <button className="table-sort"
                       onClick={header.column.getToggleSortingHandler()}
                       type="button"
                     >
@@ -116,7 +116,7 @@ export function CardTable({
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   )
 }

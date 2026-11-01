@@ -55,11 +55,13 @@ export function CardEditor({ card, onDelete, onSave }: CardEditorProps) {
   }
 
   return (
-    <article>
+    <article className="surface editor-card">
+      <span className="card-type">{card.type === 'basic' ? 'Basic card' : 'Cloze card'}</span>
       <label htmlFor={`${card.id}-content`}>
         {card.type === 'basic' ? 'Front' : 'Cloze text'}
       </label>
       <textarea
+        aria-invalid={Boolean(error)}
         id={`${card.id}-content`}
         onChange={(event) =>
           updateDraft(
@@ -74,7 +76,7 @@ export function CardEditor({ card, onDelete, onSave }: CardEditorProps) {
       {card.type === 'basic' ? (
         <>
           <label htmlFor={`${card.id}-back`}>Back</label>
-          <textarea
+          <textarea aria-invalid={Boolean(error)}
             id={`${card.id}-back`}
             onChange={(event) => updateDraft({ back: event.target.value })}
             rows={3}
@@ -95,7 +97,7 @@ export function CardEditor({ card, onDelete, onSave }: CardEditorProps) {
         }
         value={draft.tags.join(', ')}
       />
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <p className="field-error" role="alert">{error}</p> : null}
       <label htmlFor={`${card.id}-instruction`}>AI refinement</label>
       <input
         id={`${card.id}-instruction`}
@@ -103,13 +105,13 @@ export function CardEditor({ card, onDelete, onSave }: CardEditorProps) {
         placeholder="Make the answer more concise"
         value={instruction}
       />
-      <button disabled={refining} onClick={handleRefine} type="button">
+      <button className="button-secondary" disabled={refining} onClick={handleRefine} type="button">
         {refining ? 'Refining...' : 'Refine with AI'}
       </button>
-      <button onClick={handleSave} type="button">
+      <button className="button-primary" onClick={handleSave} type="button">
         Save card
       </button>
-      <button onClick={onDelete} type="button">
+      <button className="button-danger" onClick={onDelete} type="button">
         Delete card
       </button>
     </article>

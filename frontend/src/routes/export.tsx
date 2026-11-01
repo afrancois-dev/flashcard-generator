@@ -40,20 +40,26 @@ function ExportPage() {
   }
 
   return (
-    <section>
-      <h1>Export</h1>
-      <p>Reviewed cards can be exported as Anki or text files here.</p>
-      <p>No reviewed cards are currently loaded.</p>
-      <button onClick={() => exportEmpty('csv')} type="button">
+    <section className="page page-narrow">
+      <div className="page-header">
+        <h1>Export</h1>
+        <p>Reviewed cards can be exported as Anki or text files here.</p>
+      </div>
+      <div className="surface stack">
+      <p className="muted">No reviewed cards are currently loaded.</p>
+      <div className="cluster">
+      <button className="button-secondary" onClick={() => exportEmpty('csv')} type="button">
         Download CSV
       </button>
-      <button onClick={() => exportEmpty('txt')} type="button">
+      <button className="button-secondary" onClick={() => exportEmpty('txt')} type="button">
         Download TXT
       </button>
-      <button onClick={exportApkg} type="button">
+      <button className="button-primary" onClick={exportApkg} type="button">
         Download APKG
       </button>
-      {status ? <p role="status">{status}</p> : null}
+      </div>
+      {status ? <p className="status" role="status">{status}</p> : null}
+      </div>
     </section>
   )
 }

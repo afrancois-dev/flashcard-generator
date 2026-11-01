@@ -85,26 +85,36 @@ function ReviewPage() {
   }
 
   return (
-    <section>
-      <h1>Review cards</h1>
-      <button onClick={addCard} type="button">
+    <section className="page">
+      <div className="page-header split">
+        <div><h1>Review cards</h1><p className="muted">Edit, refine, and save your generated cards.</p></div>
+        <div className="cluster">
+        <button className="button-primary" onClick={addCard} type="button">
         Add card
       </button>
-      <button onClick={handleSave} type="button">
+      <button className="button-secondary" onClick={handleSave} type="button">
         Save cards
       </button>
-      {persistenceStatus ? <p role="status">{persistenceStatus}</p> : null}
+        </div>
+      </div>
+      <div className="surface stack">
+      {persistenceStatus ? <p className="status" role="status">{persistenceStatus}</p> : null}
+      <div className="cluster">
       <label htmlFor="bulk-instruction">Refine all cards</label>
-      <input
+      <input className="field"
         id="bulk-instruction"
         onChange={(event) => setInstruction(event.target.value)}
         placeholder="Make answers more concise"
         value={instruction}
       />
-      <button disabled={bulkRefining} onClick={handleBulkRefine} type="button">
+      <button className="button-secondary" disabled={bulkRefining} onClick={handleBulkRefine} type="button">
         {bulkRefining ? 'Refining...' : 'Refine all'}
       </button>
-      {bulkStatus ? <p role="status">{bulkStatus}</p> : null}
+      </div>
+      {bulkStatus ? <p className="status" role="status">{bulkStatus}</p> : null}
+      </div>
+      <div className="review-grid">
+      <div className="surface">
       {state.cards.length > 0 ? (
         <CardTable
           cards={state.cards}
@@ -112,6 +122,8 @@ function ReviewPage() {
           selectedIds={state.selectedIds}
         />
       ) : null}
+      </div>
+      <div className="stack">
       {state.cards.length === 0 ? (
         <p>No cards are ready for review yet.</p>
       ) : (
@@ -126,6 +138,8 @@ function ReviewPage() {
           />
         ))
       )}
+      </div>
+      </div>
     </section>
   )
 }

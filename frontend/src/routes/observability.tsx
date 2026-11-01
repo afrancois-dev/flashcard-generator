@@ -15,10 +15,14 @@ function ObservabilityPage() {
   }, [])
 
   return (
-    <section>
-      <h1>Operational metrics</h1>
-      <p>Aggregated operation counts only; source content is never displayed.</p>
-      <pre>{JSON.stringify(metrics, null, 2)}</pre>
+    <section className="page page-narrow">
+      <div className="page-header">
+        <h1>Operational metrics</h1>
+        <p>Aggregated operation counts only; source content is never displayed.</p>
+      </div>
+      <div className="surface">
+        <pre className="metrics-output" aria-label="Aggregated operational metrics">{JSON.stringify(metrics, null, 2)}</pre>
+      </div>
     </section>
   )
 }

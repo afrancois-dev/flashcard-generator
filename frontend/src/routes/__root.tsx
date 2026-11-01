@@ -33,18 +33,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <header>
-          <nav aria-label="Main navigation">
-            <Link to="/">Home</Link>
-            <Link to="/input">Input</Link>
-            <Link to="/review">Review</Link>
-            <Link to="/export">Export</Link>
-            <Link to="/observability">Metrics</Link>
-          </nav>
-        </header>
-        <main>{children}</main>
-
-        <Scripts />
+        <div className="app-shell">
+          <header className="site-header">
+            <nav aria-label="Main navigation" className="site-nav">
+              <Link className="brand" to="/">Flashcard Generator</Link>
+              <Link className="nav-link" to="/">Home</Link>
+              <Link className="nav-link" to="/input">Input</Link>
+              <Link className="nav-link" to="/review">Review</Link>
+              <Link className="nav-link" to="/export">Export</Link>
+              <Link className="nav-link" to="/observability">Metrics</Link>
+            </nav>
+          </header>
+          <main>{children}</main>
+          <Scripts />
+        </div>
       </body>
     </html>
   )

@@ -5,7 +5,11 @@ import { evaluateUserImpactAlerts } from './alerts'
 
 describe('observability', () => {
   it('records correlated success and failure metrics without payloads', async () => {
-    await observe('test_operation', async () => 'ok')
+    let successTraceId = ''
+    await observe('test_operation', async (traceId) => {
+      successTraceId = traceId
+      return 'ok'
+    })
     await expect(
       observe('test_operation', async () => {
         throw new Error('expected')
@@ -18,6 +22,7 @@ describe('observability', () => {
       failures: 1,
     })
     expect(getMetrics().test_operation.lastTraceId).toEqual(expect.any(String))
+    expect(successTraceId).toMatch(/^[a-f0-9]{32}$/)
     expect(evaluateUserImpactAlerts(0.5)).toEqual([
       expect.objectContaining({ operation: 'test_operation', failureRate: 0.5 }),
     ])

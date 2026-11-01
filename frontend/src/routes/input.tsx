@@ -81,10 +81,13 @@ function InputPage() {
   }
 
   return (
-    <section aria-busy={busy}>
-      <h1>Source input</h1>
-      <p>Provide source material or a prompt to create flashcards.</p>
-      <form onSubmit={handleSubmit} noValidate>
+    <section aria-busy={busy} className="page page-narrow">
+      <div className="page-header">
+        <h1>Source input</h1>
+        <p>Provide source material or a prompt to create flashcards.</p>
+      </div>
+      <div className="stack stack-lg">
+      <form className="surface stack" onSubmit={handleSubmit} noValidate>
         <fieldset>
           <legend>Input mode</legend>
           <label>
@@ -135,23 +138,25 @@ function InputPage() {
           rows={10}
           value={value}
         />
-        <p id="source-input-help">
+        <p className="help-text" id="source-input-help">
           {mode === 'text'
             ? 'Use source text for notes or excerpts.'
             : 'Use prompt-only mode to generate cards from an instruction.'}
         </p>
         {error ? (
-          <p id="source-input-error" role="alert">
+          <p className="field-error" id="source-input-error" role="alert">
             {error}
           </p>
         ) : null}
         {submitted ? (
-          <p role="status">Ready to generate cards from this input.</p>
+          <p className="status status-success" role="status">Ready to generate cards from this input.</p>
         ) : null}
-        <button disabled={busy} type="submit">
+        <button className="button-primary" disabled={busy} type="submit">
           Continue to generation
         </button>
       </form>
+      <div className="surface stack">
+      <div className="field-group">
       <label htmlFor="source-file">Upload a document</label>
       <input
         accept=".pdf,.txt,.md,.docx,application/pdf,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -160,8 +165,9 @@ function InputPage() {
         disabled={busy}
         type="file"
       />
-      {fileStatus ? <p role="status">{fileStatus}</p> : null}
-      <form onSubmit={handleUrlSubmit}>
+      {fileStatus ? <p className="status" role="status">{fileStatus}</p> : null}
+      </div>
+      <form className="stack" onSubmit={handleUrlSubmit}>
         <label htmlFor="source-url">Web page URL</label>
         <input
           id="source-url"
@@ -170,11 +176,13 @@ function InputPage() {
           type="url"
           value={sourceUrl}
         />
-        <button disabled={busy} type="submit">
+        <button className="button-secondary" disabled={busy} type="submit">
           Load page text
         </button>
       </form>
-      {urlStatus ? <p role="status">{urlStatus}</p> : null}
+      {urlStatus ? <p className="status" role="status">{urlStatus}</p> : null}
+      </div>
+      </div>
     </section>
   )
 }

@@ -30,8 +30,12 @@ const paths = document.paths
 if (!paths || typeof paths !== 'object' || Array.isArray(paths)) {
   throw new Error('openapi.yaml must declare paths')
 }
-if (Object.keys(paths).length !== 1 || !paths['/health']) {
-  throw new Error('openapi.yaml must document only /health')
+if (
+  Object.keys(paths).length !== 2 ||
+  !paths['/health'] ||
+  !paths['/api/v1/flashcards/generate']
+) {
+  throw new Error('openapi.yaml must document /health and flashcard generation')
 }
 
 const health = paths['/health']
@@ -47,8 +51,8 @@ if (!components || typeof components !== 'object') {
   throw new Error('openapi.yaml must declare reusable components')
 }
 
-const healthSchema = components.schemas?.Health
-const errorSchema = components.schemas?.Error
+const healthSchema = components.schemas?.HealthResponse
+const errorSchema = components.schemas?.ErrorResponse
 if (!healthSchema || !errorSchema) {
   throw new Error('openapi.yaml must define Health and Error schemas')
 }
@@ -57,14 +61,12 @@ for (const property of ['status', 'service', 'correlation_id']) {
     throw new Error(`Health schema is missing required property: ${property}`)
   }
 }
-if (!healthSchema.properties.status.enum?.includes('ok')) {
-  throw new Error('Health.status must allow only ok')
-}
-if (!healthSchema.properties.service.enum?.includes('flashcard-generator-fastapi')) {
-  throw new Error('Health.service must identify the FastAPI service')
-}
-if (!errorSchema.required?.includes('detail') || !errorSchema.properties?.detail) {
-  throw new Error('Error schema must define a detail property')
+if (
+  !errorSchema.required?.includes('error') ||
+  !errorSchema.required?.includes('message') ||
+  !errorSchema.required?.includes('correlation_id')
+) {
+  throw new Error('Error schema must define an error envelope')
 }
 
 const correlationParameter = components.parameters?.CorrelationId
@@ -91,6 +93,34 @@ for (const responseName of ['HealthResponse', 'UnexpectedFailure']) {
   const response = components.responses?.[responseName]
   if (!response?.headers?.['X-Correlation-ID']?.$ref) {
     throw new Error(`${responseName} must document the X-Correlation-ID response header`)
+  }
+}
+
+const generation = paths['/api/v1/flashcards/generate'].post
+if (
+  !generation ||
+  generation.parameters?.[0]?.$ref !==
+    '#/components/parameters/CorrelationId' ||
+  generation.requestBody?.content?.['application/json']?.schema?.$ref !==
+    '#/components/schemas/FlashcardGenerationRequest'
+) {
+  throw new Error('Generation endpoint must document its typed request')
+}
+for (const status of ['200', '422', '502']) {
+  if (!generation.responses?.[status]) {
+    throw new Error(`Generation endpoint must document ${status}`)
+  }
+}
+for (const schemaName of [
+  'HealthResponse',
+  'ErrorResponse',
+  'FlashcardGenerationRequest',
+  'BasicCard',
+  'ClozeCard',
+  'FlashcardGenerationResponse',
+]) {
+  if (!components.schemas?.[schemaName]) {
+    throw new Error(`OpenAPI must define ${schemaName}`)
   }
 }
 
