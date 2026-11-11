@@ -69,7 +69,7 @@ export function CardTable({
   })
 
   return (
-    <div className="stack">
+    <div className="surface stack table-panel">
       <label htmlFor="card-filter">Filter cards</label>
       <input className="field"
         id="card-filter"

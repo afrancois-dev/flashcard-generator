@@ -1,14 +1,16 @@
 # Anki Flashcard Generator
 
 Anki Flashcard Generator turns pasted notes, uploaded documents, web pages, or
-direct prompts into editable Anki flashcards. Users can review and refine basic
-and cloze cards, then export them as CSV, TXT, or an Anki `.apkg` package.
+direct prompts into editable Anki flashcards. Its modern review workspace opens
+as an interactive deck: swipe or use the arrow keys to browse cards, then tap or
+press Enter to flip between question and answer. Users can refine basic and
+cloze cards, then export them as CSV, TXT, or an Anki `.apkg` package.
 
 ## Architecture
 
-- **Frontend:** The root `frontend/` directory contains the React application
-  with TanStack Start, TanStack Router, TanStack Table, and client-side review
-  state.
+- **Frontend:** The root `frontend/` directory contains the responsive React
+  application with TanStack Start, TanStack Router, TanStack Table, client-side
+  review state, and an accessible touch/pointer-enabled card deck.
 - **Server boundary:** TanStack server functions are a thin browser-facing
   façade that validates UI input and forwards requests to FastAPI.
 - **Python backend:** FastAPI owns generation, refinement, collection
@@ -99,21 +101,31 @@ Start the full application and observability stack:
 docker compose up --build
 ```
 
-Open Grafana at [http://localhost:3001](http://localhost:3001). The
-**Flashcard Generator Overview** dashboard shows operation rate and p95
-latency. Use Grafana Explore with the Prometheus, Loki, or Tempo data sources
-to query the same trace-correlated request. Collector OTLP HTTP is exposed on
-`localhost:4318`; Prometheus, Loki, and Tempo are available on ports 9090,
-3100, and 3200 for local troubleshooting.
+Open the provisioned
+[**Flashcard Generator Overview** dashboard](http://localhost:3001/d/flashcard-overview/flashcard-generator-overview)
+at `http://localhost:3001/d/flashcard-overview/flashcard-generator-overview`.
+The **Grafana** link in the application header opens the same dashboard in a
+new tab. Local Compose enables anonymous Viewer access by default; these links
+are available on your machine only while the Compose stack is running.
+
+The dashboard shows operation rate and p95 latency. Use Grafana Explore with
+the Prometheus, Loki, or Tempo data sources to query the same trace-correlated
+request. Collector OTLP HTTP is exposed on `localhost:4318`; Prometheus, Loki,
+and Tempo are available on ports 9090, 3100, and 3200 for local troubleshooting.
+The old frontend **Metrics** tab has been removed in favor of Grafana.
 
 ## Product workflow
 
-1. Open **Input** and paste source text or provide a prompt.
-2. Upload a `.pdf`, `.txt`, `.md`, or `.docx` document, or load an HTTP(S)
-   article URL.
-3. Generate and review basic or cloze cards.
-4. Edit fields and tags, add or delete cards, and request AI refinement
-   through FastAPI.
+1. Open **Create** and paste source text or provide a prompt.
+2. Alternatively, upload a `.pdf`, `.txt`, `.md`, or `.docx` document, or load an
+   HTTP(S) article URL.
+3. Generate basic or cloze cards. The review page opens in **Deck preview**:
+   swipe horizontally (or use the Previous/Next controls) and tap a card to
+   reveal its answer.
+4. Keyboard users can focus the active card, use Left/Right Arrow to browse,
+   and press Enter or Space to flip it. Switch to **Edit cards** to change
+   fields and tags, add or delete cards, or request AI refinement through
+   FastAPI. Save the deck when the edits are complete.
 5. Export the reviewed collection as CSV, TXT, or APKG.
 
 AI generation requires `AI_MODEL` and the matching provider credential (for
@@ -145,10 +157,10 @@ configuration validation through `.github/workflows/ci.yml`. Pushes to `main`
 publish a versioned image to GHCR and trigger the configured development
 deployment hook through `.github/workflows/deploy.yml`.
 
-The **Metrics** route displays aggregated operation counts. Server operations
-emit JSON logs with trace and span IDs and record OpenTelemetry
-success/failure counters without recording prompts, documents, card content,
-credentials, or API responses.
+Operational dashboards are available in Grafana rather than a separate
+frontend Metrics page. Server operations emit JSON logs with trace and span IDs
+and record OpenTelemetry success/failure counters without recording prompts,
+documents, card content, credentials, or API responses.
 User-impact alert payloads can dispatch `.github/workflows/alert-responder.yml`;
 the bounded responder records a human-actionable incident and deliberately does
 not modify application data automatically.

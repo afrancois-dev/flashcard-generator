@@ -56,14 +56,17 @@ page padding and two-column review/editor layouts expand for desktop screens.
 
 ## Motion and accessibility
 
-Transitions are limited to color, border, and shadow changes. The
-`prefers-reduced-motion: reduce` media query disables transitions and
+Transitions cover color, border, shadow, and small positional changes. The
+review deck also supports horizontal pointer/touch swipes, tap-to-flip, Previous
+and Next buttons, and Left/Right Arrow plus Enter/Space keyboard controls. Its
+active card has button semantics and an accessible card-position label. The
+`prefers-reduced-motion: reduce` media query minimizes transitions and
 animations. Never remove the focus ring, and preserve the semantic heading,
 label, caption, and landmark structure already present in the routes.
 
 ## Visual QA checklist
 
-For `/`, `/input`, `/review`, `/export`, and `/observability`, verify:
+For `/`, `/input`, `/review`, and `/export`, verify:
 
 1. The page has a clear heading and the navigation indicates the current
    location.

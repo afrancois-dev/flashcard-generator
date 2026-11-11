@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 
+import { CardDeck } from '../review/card-deck'
 import { CardEditor } from '../review/card-editor'
 import { CardTable } from '../review/card-table'
 import { useReviewState } from '../review/review-state'
@@ -14,8 +15,11 @@ export const Route = createFileRoute('/review')({
   component: ReviewPage,
 })
 
+type ReviewView = 'deck' | 'edit'
+
 function ReviewPage() {
   const [state, dispatch] = useReviewState(useMemo(() => ({ cards: [] }), []))
+  const [view, setView] = useState<ReviewView>('deck')
   const [instruction, setInstruction] = useState('')
   const [bulkStatus, setBulkStatus] = useState<string | null>(null)
   const [bulkRefining, setBulkRefining] = useState(false)
@@ -40,6 +44,7 @@ function ReviewPage() {
         tags: [],
       },
     })
+    setView('edit')
   }
 
   async function handleBulkRefine() {
@@ -85,61 +90,181 @@ function ReviewPage() {
   }
 
   return (
-    <section className="page">
-      <div className="page-header split">
-        <div><h1>Review cards</h1><p className="muted">Edit, refine, and save your generated cards.</p></div>
+    <section className="page review-page">
+      <div className="page-header split review-header">
+        <div>
+          <p className="eyebrow">Your study set</p>
+          <h1>Review your deck</h1>
+          <p className="muted">
+            Preview each card, make your final edits, and export with confidence.
+          </p>
+        </div>
         <div className="cluster">
-        <button className="button-primary" onClick={addCard} type="button">
-        Add card
-      </button>
-      <button className="button-secondary" onClick={handleSave} type="button">
-        Save cards
-      </button>
+          <button className="button-secondary" onClick={addCard} type="button">
+            <span aria-hidden="true">+</span> Add card
+          </button>
+          <button
+            className="button-primary"
+            disabled={state.cards.length === 0}
+            onClick={handleSave}
+            type="button"
+          >
+            Save deck
+          </button>
         </div>
       </div>
-      <div className="surface stack">
-      {persistenceStatus ? <p className="status" role="status">{persistenceStatus}</p> : null}
-      <div className="cluster">
-      <label htmlFor="bulk-instruction">Refine all cards</label>
-      <input className="field"
-        id="bulk-instruction"
-        onChange={(event) => setInstruction(event.target.value)}
-        placeholder="Make answers more concise"
-        value={instruction}
-      />
-      <button className="button-secondary" disabled={bulkRefining} onClick={handleBulkRefine} type="button">
-        {bulkRefining ? 'Refining...' : 'Refine all'}
-      </button>
-      </div>
-      {bulkStatus ? <p className="status" role="status">{bulkStatus}</p> : null}
-      </div>
-      <div className="review-grid">
-      <div className="surface">
-      {state.cards.length > 0 ? (
-        <CardTable
-          cards={state.cards}
-          onToggleSelected={(id) => dispatch({ type: 'toggleSelected', id })}
-          selectedIds={state.selectedIds}
-        />
+
+      {persistenceStatus ? (
+        <p className="status review-status" role="status">
+          {persistenceStatus}
+        </p>
       ) : null}
-      </div>
-      <div className="stack">
-      {state.cards.length === 0 ? (
-        <p>No cards are ready for review yet.</p>
+
+      {state.cards.length > 0 ? (
+        <>
+          <div className="review-toolbar">
+            <div aria-label="Review view" className="view-switcher" role="group">
+              <button
+                aria-pressed={view === 'deck'}
+                className="view-switcher-button"
+                onClick={() => setView('deck')}
+                type="button"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <rect height="14" rx="2" width="12" x="7" y="5" />
+                  <path d="M5 8H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h1m14-11h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-1" />
+                </svg>
+                Deck preview
+              </button>
+              <button
+                aria-pressed={view === 'edit'}
+                className="view-switcher-button"
+                onClick={() => setView('edit')}
+                type="button"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                </svg>
+                Edit cards
+              </button>
+            </div>
+            <span className="review-card-total">
+              <strong>{state.cards.length}</strong>{' '}
+              {state.cards.length === 1 ? 'card' : 'cards'} in this deck
+            </span>
+          </div>
+
+          {view === 'deck' ? (
+            <div className="deck-layout">
+              <CardDeck cards={state.cards} />
+              <aside className="deck-sidebar">
+                <div className="deck-sidebar-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7Z" />
+                    <path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8Z" />
+                  </svg>
+                </div>
+                <p className="eyebrow">Make it yours</p>
+                <h2>A deck that feels like you.</h2>
+                <p>
+                  Fine-tune the wording, simplify an answer, or add the context
+                  that helps an idea stick.
+                </p>
+                <button
+                  className="button-secondary"
+                  onClick={() => setView('edit')}
+                  type="button"
+                >
+                  Edit this deck
+                  <span aria-hidden="true">→</span>
+                </button>
+                <div className="deck-sidebar-note">
+                  <span aria-hidden="true">✓</span>
+                  Your edits stay in this workspace until you save.
+                </div>
+              </aside>
+            </div>
+          ) : (
+            <div className="stack stack-lg">
+              <div className="surface refine-panel">
+                <div>
+                  <p className="eyebrow">AI assistance</p>
+                  <h2>Refine the whole deck</h2>
+                  <p className="muted">
+                    Apply one clear instruction to every card in this collection.
+                  </p>
+                </div>
+                <div className="refine-controls">
+                  <label htmlFor="bulk-instruction">Refinement instruction</label>
+                  <div className="refine-input-row">
+                    <input
+                      className="field"
+                      id="bulk-instruction"
+                      onChange={(event) => setInstruction(event.target.value)}
+                      placeholder="e.g. Make answers more concise"
+                      value={instruction}
+                    />
+                    <button
+                      className="button-secondary"
+                      disabled={bulkRefining}
+                      onClick={handleBulkRefine}
+                      type="button"
+                    >
+                      {bulkRefining ? 'Refining…' : 'Refine all'}
+                    </button>
+                  </div>
+                </div>
+                {bulkStatus ? (
+                  <p className="status" role="status">
+                    {bulkStatus}
+                  </p>
+                ) : null}
+              </div>
+              <CardTable
+                cards={state.cards}
+                onToggleSelected={(id) =>
+                  dispatch({ type: 'toggleSelected', id })
+                }
+                selectedIds={state.selectedIds}
+              />
+              <div className="editor-list">
+                {state.cards.map((card) => (
+                  <CardEditor
+                    card={card}
+                    key={card.id}
+                    onDelete={() => dispatch({ type: 'delete', id: card.id })}
+                    onSave={(updatedCard) =>
+                      dispatch({ type: 'update', card: updatedCard })
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       ) : (
-        state.cards.map((card) => (
-          <CardEditor
-            card={card}
-            key={card.id}
-            onDelete={() => dispatch({ type: 'delete', id: card.id })}
-            onSave={(updatedCard) =>
-              dispatch({ type: 'update', card: updatedCard })
-            }
-          />
-        ))
+        <div className="surface empty-deck">
+          <div className="empty-deck-visual" aria-hidden="true">
+            <span />
+            <span />
+            <span>?</span>
+          </div>
+          <p className="eyebrow">A fresh start</p>
+          <h2>Your next great deck starts here.</h2>
+          <p className="muted">
+            Add a card manually or generate a complete set from notes, a document,
+            a web page, or a prompt.
+          </p>
+          <div className="cluster empty-deck-actions">
+            <Link className="button button-primary" to="/input">
+              Generate a deck <span aria-hidden="true">→</span>
+            </Link>
+            <button className="button-secondary" onClick={addCard} type="button">
+              Add a blank card
+            </button>
+          </div>
+        </div>
       )}
-      </div>
-      </div>
     </section>
   )
 }
