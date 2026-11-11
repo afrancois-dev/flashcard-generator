@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import {
   type InputMode,
@@ -7,26 +7,51 @@ import {
 } from '../input/input-validation'
 import { extractUploadedDocument } from '../server/upload'
 import { extractSourceUrl } from '../server/url-extraction'
+import { generateCards } from '../server/generation'
+import { saveCardCollection } from '../server/card-persistence'
 
 export const Route = createFileRoute('/input')({
   component: InputPage,
 })
 
 function InputPage() {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<InputMode>('text')
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [submitted, setSubmitted] = useState(false)
   const [fileStatus, setFileStatus] = useState<string | null>(null)
   const [sourceUrl, setSourceUrl] = useState('')
   const [urlStatus, setUrlStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const validationError = validateSourceInput(mode, value)
     setError(validationError)
-    setSubmitted(!validationError)
+    if (validationError) return
+
+    setBusy(true)
+    try {
+      const collection = await generateCards({
+        data: {
+          source: { mode, content: value },
+          cardTypes: ['basic', 'cloze'],
+          requestedCount: 10,
+        },
+      })
+      await saveCardCollection({
+        data: { id: 'default', collection },
+      })
+      await navigate({ to: '/review' })
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : 'Could not generate cards from this input.',
+      )
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function handleFileChange(
@@ -46,7 +71,6 @@ function InputPage() {
       setValue(extractedText)
       setFileStatus(`Loaded text from ${file.name}.`)
       setError(null)
-      setSubmitted(false)
     } catch (fileError) {
       setFileStatus(
         fileError instanceof Error
@@ -68,7 +92,6 @@ function InputPage() {
       setValue(extractedText)
       setUrlStatus('Loaded text from the page.')
       setError(null)
-      setSubmitted(false)
     } catch (urlError) {
       setUrlStatus(
         urlError instanceof Error
@@ -97,7 +120,6 @@ function InputPage() {
               onChange={() => {
                 setMode('text')
                 setError(null)
-                setSubmitted(false)
               }}
               type="radio"
               value="text"
@@ -111,7 +133,6 @@ function InputPage() {
               onChange={() => {
                 setMode('prompt')
                 setError(null)
-                setSubmitted(false)
               }}
               type="radio"
               value="prompt"
@@ -128,7 +149,6 @@ function InputPage() {
           onChange={(event) => {
             setValue(event.target.value)
             setError(null)
-            setSubmitted(false)
           }}
           placeholder={
             mode === 'text'
@@ -148,11 +168,8 @@ function InputPage() {
             {error}
           </p>
         ) : null}
-        {submitted ? (
-          <p className="status status-success" role="status">Ready to generate cards from this input.</p>
-        ) : null}
         <button className="button-primary" disabled={busy} type="submit">
-          Continue to generation
+          {busy ? 'Generating cards...' : 'Continue to generation'}
         </button>
       </form>
       <div className="surface stack">

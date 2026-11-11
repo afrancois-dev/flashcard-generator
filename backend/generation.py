@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 from typing import Annotated, Literal
+from uuid import uuid4
 
 from pydantic import (
     BaseModel,
@@ -16,9 +17,13 @@ from pydantic import (
 )
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import UnexpectedModelBehavior
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
+from openai import AsyncOpenAI
 
 _CLOZE = re.compile(r"\{\{c\d+::[^{}]+\}\}")
 _MAX_SOURCE_LENGTH = 100_000
+_OPENCODE_SESSION_ID = f"flashcard-generator-{uuid4().hex}"
 
 
 class BasicCard(BaseModel):
@@ -120,10 +125,21 @@ class FlashcardGenerationError(Exception):
         self.status_code = status_code
 
 
-def _agent_model() -> str:
+def _agent_model() -> str | OpenAIChatModel:
     """Resolve the provider/model only when a request is made."""
 
-    return os.getenv("AI_MODEL", "openai:gpt-4o-mini")
+    model = os.getenv("AI_MODEL", "openai:gpt-4o-mini")
+    base_url = os.getenv("OPENAI_BASE_URL", "")
+    if model.startswith("openai-chat:") and "/inference/go/openai/" in base_url:
+        return OpenAIChatModel(
+            model.removeprefix("openai-chat:"),
+            provider=OpenAIProvider(
+                openai_client=AsyncOpenAI(
+                    default_headers={"x-opencode-session": _OPENCODE_SESSION_ID}
+                )
+            ),
+        )
+    return model
 
 
 # This name is part of the backend boundary and makes the orchestration

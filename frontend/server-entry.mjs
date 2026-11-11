@@ -1,4 +1,6 @@
 import { createServer } from 'node:http'
+import { readFile } from 'node:fs/promises'
+import { extname, resolve } from 'node:path'
 import { trace } from '@opentelemetry/api'
 
 import {
@@ -10,6 +12,12 @@ const port = Number(process.env.PORT ?? 3000)
 
 const { default: start } = await import('./dist/server/server.js')
 const tracer = trace.getTracer('flashcard-generator')
+const clientAssetRoot = resolve(new URL('./dist/client/assets', import.meta.url).pathname)
+const contentTypes = {
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.wasm': 'application/wasm',
+}
 
 const server = createServer(async (request, response) => {
   await tracer.startActiveSpan('http.request', async (span) => {
@@ -17,6 +25,27 @@ const server = createServer(async (request, response) => {
     try {
       const origin = `http://${request.headers.host ?? `localhost:${port}`}`
       const url = new URL(request.url ?? '/', origin)
+      if (url.pathname.startsWith('/assets/')) {
+        const assetName = decodeURIComponent(url.pathname.slice('/assets/'.length))
+        const assetPath = resolve(clientAssetRoot, assetName)
+        if (!assetPath.startsWith(`${clientAssetRoot}/`)) {
+          response.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' })
+          response.end('Invalid asset path')
+          return
+        }
+
+        try {
+          const asset = await readFile(assetPath)
+          response.writeHead(200, {
+            'cache-control': 'public, max-age=31536000, immutable',
+            'content-type': contentTypes[extname(assetPath)] ?? 'application/octet-stream',
+          })
+          response.end(request.method === 'HEAD' ? undefined : asset)
+          return
+        } catch (error) {
+          if (error?.code !== 'ENOENT') throw error
+        }
+      }
       const body =
         request.method === 'GET' || request.method === 'HEAD'
           ? undefined
