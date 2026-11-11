@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
 import { MAX_FETCHED_HTML_CHARS } from './limits'
+import { extractUrlWithFastApi } from './fastapi-client'
 export class UrlExtractionError extends Error {
   constructor(message: string) {
     super(message)
@@ -95,4 +96,4 @@ const sourceUrlSchema = z.object({ url: z.string().trim().min(1) })
 
 export const extractSourceUrl = createServerFn({ method: 'POST' })
   .validator((input: unknown) => sourceUrlSchema.parse(input))
-  .handler(({ data }) => fetchSourceUrl(data.url))
+  .handler(({ data }) => extractUrlWithFastApi(data.url))

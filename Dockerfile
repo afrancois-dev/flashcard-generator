@@ -21,6 +21,7 @@ COPY --from=build /app/frontend/package*.json ./
 COPY --from=build /app/frontend/node_modules ./node_modules
 COPY --from=build /app/frontend/dist ./dist
 COPY --from=build /app/frontend/server-entry.mjs ./server-entry.mjs
+COPY --from=build /app/frontend/telemetry-entry.mjs ./telemetry-entry.mjs
 
 RUN mkdir -p /app/data
 EXPOSE 3000

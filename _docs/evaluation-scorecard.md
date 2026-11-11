@@ -14,7 +14,7 @@ updated as evaluation follow-up issues are completed.
 | Containerization | Complete locally | Dockerfile, Compose volume, health check, and smoke-tested image are in #21. |
 | Deployment | Blocked | #22 contains versioned GHCR publishing, a deployment hook, and rollback workflow, but no hosting target or deployment secret is configured. |
 | CI/CD | Implemented, not exercised remotely | PR validation and main-branch publish/deploy workflows are in `.github/workflows/`; remote execution requires repository environment configuration. |
-| Observability | Complete locally | Correlated JSON logs, in-memory metrics, and the `/observability` route are implemented in #23. |
+| Observability | Complete locally | `frontend/telemetry-entry.mjs` initializes OpenTelemetry before requests; operation spans, metrics, and trace-correlated structured logs are exported through `observability/otel-collector-config.yml` to Prometheus, Loki, Tempo, and the provisioned Grafana dashboard. Privacy-safe fields only; see `/observability` and #23. |
 | Alerting on user impact | Complete locally | Failure-rate alert evaluation and deterministic responder demonstration are implemented in #23. |
 | On-call agent | Complete as bounded responder | `alert-responder.yml` and `ops/respond-to-alert.mjs` create trace-correlated human-actionable incidents. |
 

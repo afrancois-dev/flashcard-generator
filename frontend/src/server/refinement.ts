@@ -8,6 +8,7 @@ import {
 import { parseCardGenerationResponse } from '../generation/contracts'
 import type { Card } from '../domain/cards'
 import { getConfiguredAiProvider, type AiProvider } from './ai-provider'
+import { refineBulkWithFastApi, refineWithFastApi } from './fastapi-client'
 
 async function refineOneCard(
   provider: AiProvider,
@@ -44,15 +45,8 @@ export async function refineCardWithProvider(
 
 export const refineCard = createServerFn({ method: 'POST' })
   .validator((input: unknown) => refinementRequestSchema.parse(input))
-  .handler(({ data }) => refineOneCard(getConfiguredAiProvider(), data))
+  .handler(({ data }) => refineWithFastApi(data.card, data.instruction))
 
 export const refineCards = createServerFn({ method: 'POST' })
   .validator((input: unknown) => bulkRefinementRequestSchema.parse(input))
-  .handler(async ({ data }) => {
-    const provider = getConfiguredAiProvider()
-    return Promise.all(
-      data.cards.map((card) =>
-        refineOneCard(provider, { card, instruction: data.instruction }),
-      ),
-    )
-  })
+  .handler(({ data }) => refineBulkWithFastApi(data.cards, data.instruction))

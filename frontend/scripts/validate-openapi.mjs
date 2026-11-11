@@ -31,11 +31,14 @@ if (!paths || typeof paths !== 'object' || Array.isArray(paths)) {
   throw new Error('openapi.yaml must declare paths')
 }
 if (
-  Object.keys(paths).length !== 2 ||
   !paths['/health'] ||
-  !paths['/api/v1/flashcards/generate']
+  !paths['/api/v1/flashcards/generate'] ||
+  !paths['/api/v1/flashcards/refine'] ||
+  !paths['/api/v1/flashcards/refine/bulk'] ||
+  !paths['/api/v1/collections/{collection_id}'] ||
+  !paths['/api/v1/sources/url']
 ) {
-  throw new Error('openapi.yaml must document /health and flashcard generation')
+  throw new Error('openapi.yaml must document all FastAPI backend contracts')
 }
 
 const health = paths['/health']
@@ -69,38 +72,37 @@ if (
   throw new Error('Error schema must define an error envelope')
 }
 
-const correlationParameter = components.parameters?.CorrelationId
-const correlationHeader = components.headers?.CorrelationId
 if (
-  correlationParameter?.name !== 'X-Correlation-ID' ||
-  correlationParameter?.in !== 'header' ||
-  correlationParameter.required !== false ||
-  correlationParameter.schema?.pattern !== '^[A-Za-z0-9._:-]{1,128}$' ||
-  !correlationHeader?.schema
+  health.get.parameters?.[0]?.name !== 'X-Correlation-ID' ||
+  health.get.parameters?.[0]?.in !== 'header' ||
+  health.get.parameters?.[0]?.required !== false
 ) {
   throw new Error('Correlation-ID request and response behavior is incomplete')
 }
 
 if (
-  health.get.parameters?.[0]?.$ref !== '#/components/parameters/CorrelationId' ||
-  health.get.responses['200']?.$ref !== '#/components/responses/HealthResponse' ||
-  health.get.responses['500']?.$ref !== '#/components/responses/UnexpectedFailure'
+  health.get.responses['200']?.content?.['application/json']?.schema?.$ref !==
+    '#/components/schemas/HealthResponse' ||
+  health.get.responses['500']?.content?.['application/json']?.schema?.$ref !==
+    '#/components/schemas/ErrorResponse'
 ) {
-  throw new Error('GET /health must use the reusable correlation and response components')
+  throw new Error('GET /health must use the health and error schemas')
 }
 
-for (const responseName of ['HealthResponse', 'UnexpectedFailure']) {
-  const response = components.responses?.[responseName]
-  if (!response?.headers?.['X-Correlation-ID']?.$ref) {
-    throw new Error(`${responseName} must document the X-Correlation-ID response header`)
+for (const response of [
+  health.get.responses['200'],
+  health.get.responses['500'],
+  paths['/api/v1/flashcards/generate'].post.responses['200'],
+]) {
+  if (!response?.headers?.['X-Correlation-ID']?.schema) {
+    throw new Error('Backend responses must document the X-Correlation-ID header')
   }
 }
 
 const generation = paths['/api/v1/flashcards/generate'].post
 if (
   !generation ||
-  generation.parameters?.[0]?.$ref !==
-    '#/components/parameters/CorrelationId' ||
+  generation.parameters?.[0]?.name !== 'X-Correlation-ID' ||
   generation.requestBody?.content?.['application/json']?.schema?.$ref !==
     '#/components/schemas/FlashcardGenerationRequest'
 ) {

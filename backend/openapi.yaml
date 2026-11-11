@@ -1,93 +1,545 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
-  title: Flashcard Generator FastAPI Operational API
+  title: Flashcard Generator Backend
+  description: Operational boundary for the Python backend.
   version: 0.1.0
-  description: >-
-    The operational boundary for the separate FastAPI service. Product
-    operations remain owned by TanStack server functions.
 servers:
   - url: http://localhost:8000
-    description: Local FastAPI service
 paths:
   /health:
     get:
       summary: Check backend availability
-      operationId: getHealth
+      operationId: health_health_get
       parameters:
-        - $ref: '#/components/parameters/CorrelationId'
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            title: X-Correlation-Id
       responses:
         '200':
-          $ref: '#/components/responses/HealthResponse'
+          description: The backend is available.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
         '500':
-          $ref: '#/components/responses/UnexpectedFailure'
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Internal Server Error
+  /api/v1/flashcards/generate:
+    post:
+      summary: Generate validated flashcards
+      operationId: generate_api_v1_flashcards_generate_post
+      parameters:
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            title: X-Correlation-Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlashcardGenerationRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlashcardGenerationResponse'
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+        '422':
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Content
+        '502':
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Gateway
+  /api/v1/flashcards/refine:
+    post:
+      summary: Refine one flashcard
+      operationId: refine_api_v1_flashcards_refine_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefinementRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/BasicCard'
+                  - $ref: '#/components/schemas/ClozeCard'
+                title: Response Refine Api V1 Flashcards Refine Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/flashcards/refine/bulk:
+    post:
+      summary: Refine multiple flashcards
+      operationId: refine_bulk_api_v1_flashcards_refine_bulk_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkRefinementRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/BasicCard'
+                    - $ref: '#/components/schemas/ClozeCard'
+                type: array
+                title: Response Refine Bulk Api V1 Flashcards Refine Bulk Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/collections/{collection_id}:
+    put:
+      summary: Save a card collection
+      operationId: save_collection_api_v1_collections__collection_id__put
+      parameters:
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Collection Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardCollectionPayload'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      summary: Load a card collection
+      operationId: load_collection_api_v1_collections__collection_id__get
+      parameters:
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Collection Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CardCollectionPayload'
+                  - type: 'null'
+                title: Response Load Collection Api V1 Collections  Collection Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/sources/url:
+    post:
+      summary: Extract readable text from a URL
+      operationId: extract_url_api_v1_sources_url_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties:
+                type: string
+              type: object
+              title: Payload
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/sources/document:
+    post:
+      summary: Extract text from a document
+      operationId: extract_document_api_v1_sources_document_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
-  parameters:
-    CorrelationId:
-      name: X-Correlation-ID
-      in: header
-      required: false
-      description: >-
-        A caller-provided correlation ID. Values with 1–128 ASCII letters,
-        digits, '.', '_', ':', or '-' are valid and are echoed. Missing or
-        invalid values are replaced with a generated ID.
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
-        pattern: '^[A-Za-z0-9._:-]{1,128}$'
   schemas:
-    Health:
+    BasicCard:
+      properties:
+        id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Id
+        type:
+          type: string
+          const: basic
+          title: Type
+        front:
+          type: string
+          maxLength: 10000
+          minLength: 1
+          title: Front
+        back:
+          type: string
+          maxLength: 10000
+          minLength: 1
+          title: Back
+        tags:
+          items:
+            type: string
+            minLength: 1
+          type: array
+          maxItems: 20
+          title: Tags
+      additionalProperties: false
+      type: object
+      required:
+        - id
+        - type
+        - front
+        - back
+        - tags
+      title: BasicCard
+    BulkRefinementRequest:
+      properties:
+        cards:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/BasicCard'
+              - $ref: '#/components/schemas/ClozeCard'
+            discriminator:
+              propertyName: type
+              mapping:
+                basic: '#/components/schemas/BasicCard'
+                cloze: '#/components/schemas/ClozeCard'
+          type: array
+          maxItems: 50
+          minItems: 1
+          title: Cards
+        instruction:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Instruction
+      additionalProperties: false
+      type: object
+      required:
+        - cards
+        - instruction
+      title: BulkRefinementRequest
+    CardCollectionPayload:
+      properties:
+        cards:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/BasicCard'
+              - $ref: '#/components/schemas/ClozeCard'
+            discriminator:
+              propertyName: type
+              mapping:
+                basic: '#/components/schemas/BasicCard'
+                cloze: '#/components/schemas/ClozeCard'
+          type: array
+          maxItems: 50
+          title: Cards
+      additionalProperties: false
+      type: object
+      required:
+        - cards
+      title: CardCollectionPayload
+    ClozeCard:
+      properties:
+        id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Id
+        type:
+          type: string
+          const: cloze
+          title: Type
+        text:
+          type: string
+          maxLength: 10000
+          minLength: 1
+          title: Text
+        tags:
+          items:
+            type: string
+            minLength: 1
+          type: array
+          maxItems: 20
+          title: Tags
+      additionalProperties: false
+      type: object
+      required:
+        - id
+        - type
+        - text
+        - tags
+      title: ClozeCard
+    DocumentPayload:
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Name
+        mime_type:
+          type: string
+          title: Mime Type
+          default: ''
+        data:
+          items:
+            type: integer
+          type: array
+          maxItems: 10000000
+          title: Data
+      type: object
+      required:
+        - name
+        - data
+      title: DocumentPayload
+    ErrorResponse:
+      properties:
+        error:
+          type: string
+          title: Error
+        message:
+          type: string
+          title: Message
+        correlation_id:
+          type: string
+          title: Correlation Id
+      additionalProperties: false
+      type: object
+      required:
+        - error
+        - message
+        - correlation_id
+      title: ErrorResponse
+      description: Stable error envelope shared by product endpoints.
+    FlashcardGenerationRequest:
+      properties:
+        source_text:
+          type: string
+          maxLength: 100000
+          minLength: 1
+          title: Source Text
+          description: Source material used to create cards.
+        card_types:
+          items:
+            type: string
+            enum:
+              - basic
+              - cloze
+          type: array
+          maxItems: 2
+          minItems: 1
+          title: Card Types
+        requested_count:
+          type: integer
+          maximum: 50
+          minimum: 1
+          title: Requested Count
+      additionalProperties: false
+      type: object
+      required:
+        - source_text
+        - card_types
+        - requested_count
+      title: FlashcardGenerationRequest
+    FlashcardGenerationResponse:
+      properties:
+        cards:
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/BasicCard'
+              - $ref: '#/components/schemas/ClozeCard'
+            discriminator:
+              propertyName: type
+              mapping:
+                basic: '#/components/schemas/BasicCard'
+                cloze: '#/components/schemas/ClozeCard'
+          type: array
+          maxItems: 50
+          minItems: 1
+          title: Cards
+        correlation_id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Correlation Id
+      additionalProperties: false
+      type: object
+      required:
+        - cards
+        - correlation_id
+      title: FlashcardGenerationResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+        service:
+          type: string
+          title: Service
+        correlation_id:
+          type: string
+          title: Correlation Id
       type: object
       required:
         - status
         - service
         - correlation_id
+      title: HealthResponse
+      description: Stable response contract for the backend health check.
+    RefinementRequest:
       properties:
-        status:
+        card:
+          oneOf:
+            - $ref: '#/components/schemas/BasicCard'
+            - $ref: '#/components/schemas/ClozeCard'
+          title: Card
+          discriminator:
+            propertyName: type
+            mapping:
+              basic: '#/components/schemas/BasicCard'
+              cloze: '#/components/schemas/ClozeCard'
+        instruction:
           type: string
-          enum:
-            - ok
-        service:
-          type: string
-          enum:
-            - flashcard-generator-fastapi
-        correlation_id:
-          type: string
-          description: The echoed or generated correlation ID.
-    Error:
+          maxLength: 2000
+          minLength: 1
+          title: Instruction
+      additionalProperties: false
       type: object
       required:
-        - detail
+        - card
+        - instruction
+      title: RefinementRequest
+    ValidationError:
       properties:
-        detail:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
           type: string
-  responses:
-    HealthResponse:
-      description: The backend is available.
-      headers:
-        X-Correlation-ID:
-          $ref: '#/components/headers/CorrelationId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Health'
-          example:
-            status: ok
-            service: flashcard-generator-fastapi
-            correlation_id: request-123
-    UnexpectedFailure:
-      description: Unexpected service failure.
-      headers:
-        X-Correlation-ID:
-          $ref: '#/components/headers/CorrelationId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-  headers:
-    CorrelationId:
-      description: The echoed or generated correlation ID for this request.
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 128
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError

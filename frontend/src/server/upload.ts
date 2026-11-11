@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
-import { extractDocumentText } from './document-extraction'
+import { extractDocumentWithFastApi } from './fastapi-client'
 import { MAX_UPLOAD_BYTES } from './limits'
 
 const uploadedDocumentSchema = z.object({
@@ -21,9 +21,9 @@ const uploadedDocumentSchema = z.object({
 export const extractUploadedDocument = createServerFn({ method: 'POST' })
   .validator((input: unknown) => uploadedDocumentSchema.parse(input))
   .handler(({ data }) =>
-    extractDocumentText({
+    extractDocumentWithFastApi({
       name: data.name,
       mimeType: data.mimeType,
-      data: Uint8Array.from(data.data),
+      data: data.data,
     }),
   )

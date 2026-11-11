@@ -9,17 +9,16 @@ and cloze cards, then export them as CSV, TXT, or an Anki `.apkg` package.
 - **Frontend:** The root `frontend/` directory contains the React application
   with TanStack Start, TanStack Router, TanStack Table, and client-side review
   state.
-- **Server boundary:** TanStack server functions for AI calls, document
-  extraction, URL fetching, validation, and refinement.
-- **Python boundary:** A root FastAPI service provides the operational
-  `/health` contract on port `8000`; it does not duplicate current product
-  behavior.
+- **Server boundary:** TanStack server functions are a thin browser-facing
+  façade that validates UI input and forwards requests to FastAPI.
+- **Python backend:** FastAPI owns generation, refinement, collection
+  persistence, URL extraction, and the versioned API contracts on port `8000`.
 - **Shared domain:** Zod-validated basic and cloze card contracts.
 - **Exports:** Browser-side CSV/TXT and APKG generation.
 
-The current MVP keeps review drafts in browser memory. Persistent storage,
-containerization, deployment, and operational telemetry are tracked in the
-evaluation follow-up issues.
+Review collections are persisted in SQLite by FastAPI. Containerization,
+observability, and responder behavior are implemented locally; public deployment
+remains tracked as the external blocker in issue #22.
 
 ## Local development
 
@@ -33,8 +32,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The FastAPI operational boundary is optional for the TanStack UI and runs
-independently:
+Start the FastAPI backend:
 
 ```bash
 python -m pip install -e "backend[test]"
@@ -44,6 +42,17 @@ python -m uvicorn backend.app:app --reload --port 8000
 Check [http://localhost:8000/health](http://localhost:8000/health). Its
 documented response and ownership boundaries are in
 [_docs/backend-architecture.md](_docs/backend-architecture.md).
+
+The FastAPI backend resolves its Pydantic AI provider only when generation or
+refinement is called. Set `AI_MODEL` (default `deepseek-v4.1-flash-free`) and the provider
+credential, such as `OPENAI_API_KEY`, outside source control. Backend tests use
+Pydantic AI's local `TestModel` and never require credentials or network access.
+The TanStack UI calls this backend through its server-function façade.
+
+Dependency approval for issue #26: the user explicitly authorized treating all
+issues, including the required `pydantic-ai` dependency. The implementation
+adds only `pydantic-ai` to the Python backend; npm dependencies remain
+unchanged.
 
 Run the validation suite and production build:
 
@@ -76,17 +85,40 @@ Remove the database volume as well:
 docker compose down -v
 ```
 
+### OpenTelemetry and Grafana
+
+The Compose stack includes an OpenTelemetry Collector, Prometheus, Loki,
+Tempo, and Grafana. The server initializes OpenTelemetry before accepting
+requests and sends only operation names, status, durations, and
+trace/span identifiers. Prompts, source documents, card content, provider
+responses, credentials, and URL values are never telemetry attributes.
+
+Start the full application and observability stack:
+
+```bash
+docker compose up --build
+```
+
+Open Grafana at [http://localhost:3001](http://localhost:3001). The
+**Flashcard Generator Overview** dashboard shows operation rate and p95
+latency. Use Grafana Explore with the Prometheus, Loki, or Tempo data sources
+to query the same trace-correlated request. Collector OTLP HTTP is exposed on
+`localhost:4318`; Prometheus, Loki, and Tempo are available on ports 9090,
+3100, and 3200 for local troubleshooting.
+
 ## Product workflow
 
 1. Open **Input** and paste source text or provide a prompt.
 2. Upload a `.pdf`, `.txt`, `.md`, or `.docx` document, or load an HTTP(S)
    article URL.
 3. Generate and review basic or cloze cards.
-4. Edit fields and tags, add or delete cards, and request AI refinement.
+4. Edit fields and tags, add or delete cards, and request AI refinement
+   through FastAPI.
 5. Export the reviewed collection as CSV, TXT, or APKG.
 
-AI generation requires `AI_API_KEY`, `AI_API_URL`, and `AI_MODEL` in the server
-environment. Never commit these values or send source content to telemetry.
+AI generation requires `AI_MODEL` and the matching provider credential (for
+example `OPENAI_API_KEY`) in the FastAPI environment. Never commit these values
+or send source content to telemetry.
 
 ## Project documentation and tracking
 
@@ -114,17 +146,19 @@ publish a versioned image to GHCR and trigger the configured development
 deployment hook through `.github/workflows/deploy.yml`.
 
 The **Metrics** route displays aggregated operation counts. Server operations
-emit JSON logs with a trace ID and record success/failure counters without
-recording prompts, documents, card content, credentials, or API responses.
+emit JSON logs with trace and span IDs and record OpenTelemetry
+success/failure counters without recording prompts, documents, card content,
+credentials, or API responses.
 User-impact alert payloads can dispatch `.github/workflows/alert-responder.yml`;
 the bounded responder records a human-actionable incident and deliberately does
 not modify application data automatically.
 
-The development environment must provide `DEVELOPMENT_DEPLOY_HOOK` as a
-protected GitHub environment secret. To roll back, manually run the Deploy
-development image workflow with a previously published `sha-<commit>` image
-tag. Production promotion remains intentionally environment-specific and must
-be configured as a protected manual environment.
+The development environment must provide `DEVELOPMENT_DEPLOY_HOOK` and
+`DEVELOPMENT_HEALTH_URL` as protected GitHub environment secrets. The workflow
+waits for the configured health URL after deployment and rollback. To roll
+back, manually run the Deploy development image workflow with a previously
+published `sha-<commit>` image tag. Production promotion remains intentionally
+environment-specific and must be configured as a protected manual environment.
 
 No hosting target is configured in this repository yet, so the public
 deployment criterion remains explicitly blocked rather than represented as a

@@ -4,14 +4,18 @@ import {
   generationRequestSchema,
   parseCardGenerationResponse,
 } from '../generation/contracts'
-import { getConfiguredAiProvider } from './ai-provider'
+import { generateWithFastApi } from './fastapi-client'
 import { observe } from './observability'
 
 export const generateCards = createServerFn({ method: 'POST' })
   .validator((input: unknown) => generationRequestSchema.parse(input))
   .handler(async ({ data }) =>
     observe('card_generation', async () => {
-      const providerResponse = await getConfiguredAiProvider().generateCards(data)
+      const providerResponse = await generateWithFastApi({
+        sourceText: data.source.content,
+        cardTypes: data.cardTypes,
+        requestedCount: data.requestedCount,
+      })
       const parsedResponse = parseCardGenerationResponse(providerResponse)
 
       if (!parsedResponse.success) {
