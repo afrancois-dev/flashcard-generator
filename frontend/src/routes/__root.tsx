@@ -63,12 +63,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <Link className="nav-link" to="/input">
                   Create
                 </Link>
-                <Link className="nav-link" to="/review">
-                  Review
+                <Link className="nav-link" to="/decks">
+                  Decks
                 </Link>
-                <Link className="nav-link" to="/export">
-                  Export
-                </Link>
+  
               </div>
               <a
                 className="grafana-link"

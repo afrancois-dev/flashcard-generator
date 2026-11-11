@@ -119,14 +119,13 @@ The old frontend **Metrics** tab has been removed in favor of Grafana.
 1. Open **Create** and paste source text or provide a prompt.
 2. Alternatively, upload a `.pdf`, `.txt`, `.md`, or `.docx` document, or load an
    HTTP(S) article URL.
-3. Generate basic or cloze cards. The review page opens in **Deck preview**:
-   swipe horizontally (or use the Previous/Next controls) and tap a card to
-   reveal its answer.
+3. Generate basic or cloze cards. The **Decks** page opens with the new deck
+   selected; swipe through **Deck preview** or open **Cards** to edit.
 4. Keyboard users can focus the active card, use Left/Right Arrow to browse,
-   and press Enter or Space to flip it. Switch to **Edit cards** to change
-   fields and tags, add or delete cards, or request AI refinement through
-   FastAPI. Save the deck when the edits are complete.
-5. Export the reviewed collection as CSV, TXT, or APKG.
+   and press Enter or Space to flip it. In **Cards**, click any card in the
+   list to edit its details. Multiple decks are supported: create, switch, and
+   delete decks from the left panel. Save the deck when edits are complete.
+5. Export the selected deck directly from Decks as CSV, TXT, or APKG.
 
 AI generation requires `AI_MODEL` and the matching provider credential (for
 example `OPENAI_API_KEY`) in the FastAPI environment. Never commit these values

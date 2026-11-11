@@ -1,5 +1,6 @@
+import initSqlJs from 'sql.js'
 import AnkiExport from 'anki-apkg-export'
-import wasmUrl from 'anki-apkg-export/sql-wasm.wasm?url'
+import wasmUrl from 'sql.js/dist/sql-wasm-browser.wasm?url'
 
 import type { CardCollection } from '../domain/cards'
 
@@ -35,11 +36,9 @@ export function exportCardsToDeck(deck: ApkgDeck, collection: CardCollection): v
 export async function createApkgBlob(
   collection: CardCollection,
   deckName = 'Flashcard Generator',
-  locateFile: () => string = () => wasmUrl,
 ): Promise<Blob> {
-  const deck = await AnkiExport.create(deckName, {
-    locateFile,
-  })
+  const sql = await initSqlJs({ locateFile: () => wasmUrl })
+  const deck = await AnkiExport.create(deckName, { sql })
 
   try {
     exportCardsToDeck(deck, collection)
@@ -50,9 +49,12 @@ export async function createApkgBlob(
 }
 
 export function downloadApkg(blob: Blob, filename = 'flashcards.apkg'): void {
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.download = filename
-  link.href = URL.createObjectURL(blob)
+  link.href = url
+  document.body.appendChild(link)
   link.click()
-  URL.revokeObjectURL(link.href)
+  document.body.removeChild(link)
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

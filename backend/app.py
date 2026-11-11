@@ -298,6 +298,56 @@ def create_app() -> FastAPI:
             )
         return CardCollectionPayload(cards=cards)
 
+    @app.get("/api/v1/collections", summary="List card collections")
+    async def list_collections():
+        ensure_database()
+        with sqlite3.connect(database_path()) as database:
+            rows = database.execute(
+                """SELECT c.id, c.updated_at, COUNT(cards.id)
+                   FROM collections c
+                   LEFT JOIN cards ON cards.collection_id = c.id
+                   GROUP BY c.id
+                   ORDER BY c.updated_at DESC"""
+            ).fetchall()
+        return [
+            {"id": row[0], "updated_at": row[1], "card_count": row[2]}
+            for row in rows
+        ]
+
+    @app.post("/api/v1/collections", summary="Create a card collection")
+    async def create_collection(payload: dict | None = None):
+        ensure_database()
+        name = ((payload or {}).get("name") or "").strip()
+        collection_id = name if name else uuid4().hex[:8]
+        now = datetime.now(timezone.utc).isoformat()
+        try:
+            with sqlite3.connect(database_path()) as database:
+                database.execute(
+                    """INSERT INTO collections (id, created_at, updated_at)
+                       VALUES (?, ?, ?)""",
+                    (collection_id, now, now),
+                )
+                database.commit()
+        except sqlite3.IntegrityError as error:
+            raise FlashcardGenerationError(
+                "duplicate_collection",
+                "A collection with that name already exists.",
+                409,
+            ) from error
+        return {"id": collection_id}
+
+    @app.delete(
+        "/api/v1/collections/{collection_id}", summary="Delete a card collection"
+    )
+    async def delete_collection(collection_id: str):
+        ensure_database()
+        with sqlite3.connect(database_path()) as database:
+            database.execute(
+                "DELETE FROM collections WHERE id = ?", (collection_id,)
+            )
+            database.commit()
+        return {"deleted": True, "id": collection_id}
+
     @app.post("/api/v1/sources/url", summary="Extract readable text from a URL")
     async def extract_url(payload: dict[str, str]):
         value = payload.get("url", "").strip()

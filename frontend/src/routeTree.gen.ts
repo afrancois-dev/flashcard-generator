@@ -10,19 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ExportRouteImport } from './routes/export'
+import { Route as DecksRouteImport } from './routes/decks'
 import { Route as InputRouteImport } from './routes/input'
-import { Route as ObservabilityRouteImport } from './routes/observability'
-import { Route as ReviewRouteImport } from './routes/review'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExportRoute = ExportRouteImport.update({
-  id: '/export',
-  path: '/export',
+const DecksRoute = DecksRouteImport.update({
+  id: '/decks',
+  path: '/decks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InputRoute = InputRouteImport.update({
@@ -30,53 +28,35 @@ const InputRoute = InputRouteImport.update({
   path: '/input',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ObservabilityRoute = ObservabilityRouteImport.update({
-  id: '/observability',
-  path: '/observability',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReviewRoute = ReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/export': typeof ExportRoute
+  '/decks': typeof DecksRoute
   '/input': typeof InputRoute
-  '/observability': typeof ObservabilityRoute
-  '/review': typeof ReviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/export': typeof ExportRoute
+  '/decks': typeof DecksRoute
   '/input': typeof InputRoute
-  '/observability': typeof ObservabilityRoute
-  '/review': typeof ReviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/export': typeof ExportRoute
+  '/decks': typeof DecksRoute
   '/input': typeof InputRoute
-  '/observability': typeof ObservabilityRoute
-  '/review': typeof ReviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/export' | '/input' | '/observability' | '/review'
+  fullPaths: '/' | '/decks' | '/input'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/export' | '/input' | '/observability' | '/review'
-  id: '__root__' | '/' | '/export' | '/input' | '/observability' | '/review'
+  to: '/' | '/decks' | '/input'
+  id: '__root__' | '/' | '/decks' | '/input'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ExportRoute: typeof ExportRoute
+  DecksRoute: typeof DecksRoute
   InputRoute: typeof InputRoute
-  ObservabilityRoute: typeof ObservabilityRoute
-  ReviewRoute: typeof ReviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -88,11 +68,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/export': {
-      id: '/export'
-      path: '/export'
-      fullPath: '/export'
-      preLoaderRoute: typeof ExportRouteImport
+    '/decks': {
+      id: '/decks'
+      path: '/decks'
+      fullPath: '/decks'
+      preLoaderRoute: typeof DecksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/input': {
@@ -102,29 +82,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InputRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/observability': {
-      id: '/observability'
-      path: '/observability'
-      fullPath: '/observability'
-      preLoaderRoute: typeof ObservabilityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/review': {
-      id: '/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof ReviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ExportRoute: ExportRoute,
+  DecksRoute: DecksRoute,
   InputRoute: InputRoute,
-  ObservabilityRoute: ObservabilityRoute,
-  ReviewRoute: ReviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

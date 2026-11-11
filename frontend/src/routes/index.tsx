@@ -25,8 +25,8 @@ function Home() {
                 <path d="M5 12h14m-6-6 6 6-6 6" />
               </svg>
             </Link>
-            <Link className="button button-secondary" to="/review">
-              Explore your cards
+            <Link className="button button-secondary" to="/decks">
+              Open your decks
             </Link>
           </div>
           <div className="hero-features" aria-label="Product highlights">
@@ -123,7 +123,7 @@ function Home() {
               Add a source <span aria-hidden="true">→</span>
             </span>
           </Link>
-          <Link className="action-card action-card-primary" to="/review">
+          <Link className="action-card action-card-primary" to="/decks">
             <div className="action-card-heading">
               <span className="action-icon action-icon-review">
                 <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ function Home() {
               Preview the experience <span aria-hidden="true">→</span>
             </span>
           </Link>
-          <Link className="action-card" to="/export">
+          <Link className="action-card" to="/decks">
             <div className="action-card-heading">
               <span className="action-icon action-icon-export">
                 <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -150,12 +150,12 @@ function Home() {
               </span>
               <span className="action-number">03</span>
             </div>
-            <span className="action-card-title">Learn anywhere</span>
+            <span className="action-card-title">Take them with you</span>
             <span className="action-card-copy">
-              Export a polished Anki package or take a lightweight CSV or TXT copy.
+              Save, switch, and export your decks as Anki, CSV, or TXT.
             </span>
             <span className="action-card-link">
-              Choose a format <span aria-hidden="true">→</span>
+              Open your decks <span aria-hidden="true">→</span>
             </span>
           </Link>
         </div>

@@ -42,7 +42,7 @@ function InputPage() {
       await saveCardCollection({
         data: { id: 'default', collection },
       })
-      await navigate({ to: '/review' })
+      await navigate({ to: '/decks' })
     } catch (generationError) {
       setError(
         generationError instanceof Error

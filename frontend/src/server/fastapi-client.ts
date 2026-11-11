@@ -72,6 +72,30 @@ export function loadFromFastApi(id: string) {
   )
 }
 
+export type CollectionSummary = {
+  id: string
+  updated_at: string
+  card_count: number
+}
+
+export function listCollectionsWithFastApi() {
+  return request<CollectionSummary[]>('/api/v1/collections')
+}
+
+export function createCollectionWithFastApi(name?: string) {
+  return request<{ id: string }>('/api/v1/collections', {
+    method: 'POST',
+    body: JSON.stringify({ name: name ?? '' }),
+  })
+}
+
+export function deleteCollectionWithFastApi(id: string) {
+  return request<{ deleted: true; id: string }>(
+    `/api/v1/collections/${encodeURIComponent(id)}`,
+    { method: 'DELETE' },
+  )
+}
+
 export async function extractUrlWithFastApi(url: string) {
   const result = await request<{ text: string }>('/api/v1/sources/url', {
     method: 'POST',
