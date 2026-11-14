@@ -1,5 +1,23 @@
 # Anki Flashcard Generator
 
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TanStack](https://img.shields.io/badge/TanStack-Start%2FRouter-FF4154?logo=tanstack&logoColor=white)](https://tanstack.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Instrumented-000000?logo=opentelemetry&logoColor=white)](https://opentelemetry.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-LGTM%20(Prometheus)-F46800?logo=grafana&logoColor=white)](https://grafana.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![Loki](https://img.shields.io/badge/Loki-Logs-F46800?logo=grafana&logoColor=white)](https://grafana.com/oss/loki/)
+[![Tempo](https://img.shields.io/badge/Tempo-Traces-F46800?logo=grafana&logoColor=white)](https://grafana.com/oss/tempo/)
+
+<img width="1867" height="1006" alt="Screenshot From 2026-11-14 11-21-19" src="https://github.com/user-attachments/assets/54920882-d3f0-47b4-85c2-ff74cdd3859c" />
+
+## Demo
+
+https://github.com/user-attachments/assets/f9afa92d-7e9d-4a64-b2f1-795d57e85761
+
 Anki Flashcard Generator turns pasted notes, uploaded documents, web pages, or
 direct prompts into editable Anki flashcards. Its modern review workspace opens
 as an interactive deck: swipe or use the arrow keys to browse cards, then tap or
@@ -46,8 +64,10 @@ documented response and ownership boundaries are in
 [_docs/backend-architecture.md](_docs/backend-architecture.md).
 
 The FastAPI backend resolves its Pydantic AI provider only when generation or
-refinement is called. Set `AI_MODEL` (default `deepseek-v4.1-flash-free`) and the provider
-credential, such as `OPENAI_API_KEY`, outside source control. Backend tests use
+refinement is called. Set `AI_MODEL` (the code falls back to `openai:gpt-4o-mini`;
+`backend/.env.dev` uses `openai-chat:deepseek-v4.1-flash` through the OpenCode
+endpoint) and the provider credential, such as `OPENAI_API_KEY`, outside source
+control. Copy `backend/.env.dev` to `backend/.env` for local development. Backend tests use
 Pydantic AI's local `TestModel` and never require credentials or network access.
 The TanStack UI calls this backend through its server-function façade.
 
@@ -119,12 +139,13 @@ The old frontend **Metrics** tab has been removed in favor of Grafana.
 1. Open **Create** and paste source text or provide a prompt.
 2. Alternatively, upload a `.pdf`, `.txt`, `.md`, or `.docx` document, or load an
    HTTP(S) article URL.
-3. Generate basic or cloze cards. The **Decks** page opens with the new deck
-   selected; swipe through **Deck preview** or open **Cards** to edit.
+3. Generate basic or cloze cards. The **Decks** page opens with the generated
+   deck selected; swipe through **Deck preview** or switch to **Edit** to edit.
 4. Keyboard users can focus the active card, use Left/Right Arrow to browse,
-   and press Enter or Space to flip it. In **Cards**, click any card in the
-   list to edit its details. Multiple decks are supported: create, switch, and
-   delete decks from the left panel. Save the deck when edits are complete.
+   and press Enter or Space to flip it. In **Edit**, click any card in the
+   list to edit its details. Multiple decks are supported: create, switch,
+   rename, duplicate, and delete decks from the left panel. Save the deck when
+   edits are complete.
 5. Export the selected deck directly from Decks as CSV, TXT, or APKG.
 
 AI generation requires `AI_MODEL` and the matching provider credential (for

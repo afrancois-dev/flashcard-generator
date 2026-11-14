@@ -40,6 +40,7 @@ jobs:
 
   deploy-development:
     needs: publish
+    if: ${{ secrets.DEVELOPMENT_DEPLOY_HOOK != '' && secrets.DEVELOPMENT_HEALTH_URL != '' }}
     runs-on: ubuntu-latest
     environment: development
     steps:
