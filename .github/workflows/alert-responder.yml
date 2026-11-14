@@ -1,0 +1,24 @@
+name: Alert responder
+
+on:
+  repository_dispatch:
+    types: [user-impact-alert]
+  workflow_dispatch:
+    inputs:
+      alert_payload:
+        description: JSON alert payload containing operation and traceId
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  respond:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run bounded responder agent
+        env:
+          ALERT_PAYLOAD: ${{ github.event.client_payload.alert_payload || inputs.alert_payload }}
+        run: node ops/respond-to-alert.mjs
