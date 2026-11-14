@@ -7,7 +7,7 @@ import {
 } from '../refinement/contracts'
 import { parseCardGenerationResponse } from '../generation/contracts'
 import type { Card } from '../domain/cards'
-import { getConfiguredAiProvider, type AiProvider } from './ai-provider'
+import type { AiProvider } from './ai-provider'
 import { refineBulkWithFastApi, refineWithFastApi } from './fastapi-client'
 
 async function refineOneCard(

@@ -9,6 +9,8 @@ import {
   listCollectionsWithFastApi,
   createCollectionWithFastApi,
   deleteCollectionWithFastApi,
+  renameCollectionWithFastApi,
+  duplicateCollectionWithFastApi,
 } from './fastapi-client'
 
 const collectionRequestSchema = z.object({
@@ -22,6 +24,16 @@ const collectionIdSchema = z.object({
 
 const collectionNameSchema = z.object({
   name: z.string().trim().max(100).optional(),
+})
+
+const renameSchema = z.object({
+  id: z.string().trim().min(1).max(100),
+  newName: z.string().trim().min(1).max(100),
+})
+
+const duplicateSchema = z.object({
+  id: z.string().trim().min(1).max(100),
+  newName: z.string().trim().max(100).optional(),
 })
 
 export const saveCardCollection = createServerFn({ method: 'POST' })
@@ -58,5 +70,21 @@ export const deleteCardCollection = createServerFn({ method: 'POST' })
   .handler(({ data }) =>
     observe('card_persistence_delete', async () =>
       deleteCollectionWithFastApi(data.id),
+    ),
+  )
+
+export const renameCardCollection = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => renameSchema.parse(input))
+  .handler(({ data }) =>
+    observe('card_persistence_rename', async () =>
+      renameCollectionWithFastApi(data.id, data.newName),
+    ),
+  )
+
+export const duplicateCardCollection = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => duplicateSchema.parse(input))
+  .handler(({ data }) =>
+    observe('card_persistence_duplicate', async () =>
+      duplicateCollectionWithFastApi(data.id, data.newName),
     ),
   )

@@ -29,7 +29,12 @@ describe('MVP workflow', () => {
     const state = createReviewState(generated.data)
     const edited = reviewReducer(state, {
       type: 'update',
-      card: { ...state.cards[0], back: 'Light into chemical energy.' },
+      card: {
+        ...state.cards[0],
+        ...(state.cards[0].type === 'basic'
+          ? { back: 'Light into chemical energy.' }
+          : {}),
+      } as (typeof state.cards)[0],
     })
 
     const refined = await refineCardWithProvider(

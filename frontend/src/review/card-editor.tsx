@@ -40,8 +40,8 @@ export function CardEditor({ card, onDelete, onSave }: CardEditorProps) {
     setError(null)
     try {
       const result = await refineCard({ data: { card: draft, instruction } })
-      setDraft(result.card)
-      onSave(result.card)
+      setDraft(result)
+      onSave(result)
       setInstruction('')
     } catch (refinementError) {
       setError(
@@ -71,7 +71,7 @@ export function CardEditor({ card, onDelete, onSave }: CardEditorProps) {
           )
         }
         rows={3}
-        value={card.type === 'basic' ? draft.front : draft.text}
+          value={card.type === 'basic' ? (draft.type === 'basic' ? draft.front : '') : (draft.type === 'cloze' ? draft.text : '')}
       />
       {card.type === 'basic' ? (
         <>
@@ -80,7 +80,7 @@ export function CardEditor({ card, onDelete, onSave }: CardEditorProps) {
             id={`${card.id}-back`}
             onChange={(event) => updateDraft({ back: event.target.value })}
             rows={3}
-            value={draft.back}
+            value={draft.type === 'basic' ? draft.back : ''}
           />
         </>
       ) : null}

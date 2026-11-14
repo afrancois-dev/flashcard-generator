@@ -42,7 +42,7 @@ function InputPage() {
       await saveCardCollection({
         data: { id: 'default', collection },
       })
-      await navigate({ to: '/decks' })
+      await navigate({ to: '/decks', search: { deck: undefined } })
     } catch (generationError) {
       setError(
         generationError instanceof Error

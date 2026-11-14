@@ -55,7 +55,7 @@ export async function extractDocumentText(
         arrayBuffer: document.data.buffer.slice(
           document.data.byteOffset,
           document.data.byteOffset + document.data.byteLength,
-        ),
+        ) as ArrayBuffer,
       })
       return normalizeText(result.value)
     }

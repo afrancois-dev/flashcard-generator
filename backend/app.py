@@ -336,6 +336,92 @@ def create_app() -> FastAPI:
             ) from error
         return {"id": collection_id}
 
+    @app.post(
+        "/api/v1/collections/{collection_id}/rename",
+        summary="Rename a card collection",
+    )
+    async def rename_collection(collection_id: str, payload: dict | None = None):
+        ensure_database()
+        new_name = ((payload or {}).get("new_name") or "").strip()
+        if not new_name:
+            raise FlashcardGenerationError(
+                "invalid_name", "A new collection name is required.", 422
+            )
+        if new_name == collection_id:
+            return {"id": collection_id}
+        now = datetime.now(timezone.utc).isoformat()
+        try:
+            with sqlite3.connect(database_path()) as database:
+                existing = database.execute(
+                    "SELECT 1 FROM collections WHERE id = ?", (new_name,)
+                ).fetchone()
+                if existing:
+                    raise FlashcardGenerationError(
+                        "duplicate_collection",
+                        "A collection with that name already exists.",
+                        409,
+                    )
+                database.execute(
+                    """INSERT INTO collections (id, created_at, updated_at)
+                       VALUES (?, ?, ?)""",
+                    (new_name, now, now),
+                )
+                database.execute(
+                    "UPDATE cards SET collection_id = ? WHERE collection_id = ?",
+                    (new_name, collection_id),
+                )
+                database.execute(
+                    "DELETE FROM collections WHERE id = ?", (collection_id,)
+                )
+                database.commit()
+        except FlashcardGenerationError:
+            raise
+        except Exception as error:
+            raise FlashcardGenerationError(
+                "rename_failed", "Could not rename the collection.", 500
+            ) from error
+        return {"id": new_name}
+
+    @app.post(
+        "/api/v1/collections/{collection_id}/duplicate",
+        summary="Duplicate a card collection",
+    )
+    async def duplicate_collection(collection_id: str, payload: dict | None = None):
+        ensure_database()
+        requested = ((payload or {}).get("new_name") or "").strip()
+        new_name = requested if requested else f"{collection_id}-copy"
+        now = datetime.now(timezone.utc).isoformat()
+        try:
+            with sqlite3.connect(database_path()) as database:
+                existing = database.execute(
+                    "SELECT 1 FROM collections WHERE id = ?", (new_name,)
+                ).fetchone()
+                if existing:
+                    new_name = f"{new_name}-{uuid4().hex[:4]}"
+                database.execute(
+                    """INSERT INTO collections (id, created_at, updated_at)
+                       VALUES (?, ?, ?)""",
+                    (new_name, now, now),
+                )
+                rows = database.execute(
+                    """SELECT id, type, front, back, text, tags
+                       FROM cards WHERE collection_id = ?""",
+                    (collection_id,),
+                ).fetchall()
+                for card_id, card_type, front, back, text, tags in rows:
+                    database.execute(
+                        """INSERT INTO cards
+                           (id, collection_id, type, front, back, text, tags)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                        (card_id, new_name, card_type, front, back, text, tags),
+                    )
+                database.commit()
+        except Exception as error:
+            raise FlashcardGenerationError(
+                "duplicate_failed", "Could not duplicate the collection.", 500
+            ) from error
+        return {"id": new_name}
+
     @app.delete(
         "/api/v1/collections/{collection_id}", summary="Delete a card collection"
     )

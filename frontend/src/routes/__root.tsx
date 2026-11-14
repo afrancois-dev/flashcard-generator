@@ -63,7 +63,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <Link className="nav-link" to="/input">
                   Create
                 </Link>
-                <Link className="nav-link" to="/decks">
+                <Link className="nav-link" to="/decks" search={{ deck: undefined }}>
                   Decks
                 </Link>
   

@@ -25,7 +25,7 @@ function Home() {
                 <path d="M5 12h14m-6-6 6 6-6 6" />
               </svg>
             </Link>
-            <Link className="button button-secondary" to="/decks">
+            <Link className="button button-secondary" to="/decks" search={{ deck: undefined }}>
               Open your decks
             </Link>
           </div>
@@ -123,7 +123,7 @@ function Home() {
               Add a source <span aria-hidden="true">→</span>
             </span>
           </Link>
-          <Link className="action-card action-card-primary" to="/decks">
+          <Link className="action-card action-card-primary" to="/decks" search={{ deck: undefined }}>
             <div className="action-card-heading">
               <span className="action-icon action-icon-review">
                 <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ function Home() {
               Preview the experience <span aria-hidden="true">→</span>
             </span>
           </Link>
-          <Link className="action-card" to="/decks">
+          <Link className="action-card" to="/decks" search={{ deck: undefined }}>
             <div className="action-card-heading">
               <span className="action-icon action-icon-export">
                 <svg aria-hidden="true" viewBox="0 0 24 24">

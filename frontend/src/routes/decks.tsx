@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 
 import { CardDeck } from '../review/card-deck'
 import { CardEditor } from '../review/card-editor'
@@ -12,6 +12,8 @@ import {
   listCardCollections,
   createCardCollection,
   deleteCardCollection,
+  renameCardCollection,
+  duplicateCardCollection,
 } from '../server/card-persistence'
 import { createApkgBlob, downloadApkg } from '../export/apkg-export'
 import {
@@ -22,6 +24,9 @@ import {
 
 export const Route = createFileRoute('/decks')({
   component: DecksPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    deck: typeof search.deck === 'string' ? search.deck : undefined,
+  }),
 })
 
 type ReviewView = 'deck' | 'edit'
@@ -32,8 +37,12 @@ type CollectionSummary = {
 }
 
 function DecksPage() {
+  const navigate = useNavigate()
+  const search = Route.useSearch()
   const [decks, setDecks] = useState<CollectionSummary[]>([])
-  const [currentDeckId, setCurrentDeckId] = useState<string>('default')
+  const [currentDeckId, setCurrentDeckId] = useState<string>(
+    search.deck ?? 'default',
+  )
   const [state, dispatch] = useReviewState(useMemo(() => ({ cards: [] }), []))
   const [view, setView] = useState<ReviewView>('deck')
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
@@ -61,6 +70,18 @@ function DecksPage() {
   useEffect(() => {
     void refreshDecks()
   }, [])
+
+  useEffect(() => {
+    if (search.deck && search.deck !== currentDeckId) {
+      setCurrentDeckId(search.deck)
+    }
+  }, [search.deck])
+
+  useEffect(() => {
+    if (currentDeckId && currentDeckId !== search.deck) {
+      void navigate({ to: '/decks', search: { deck: currentDeckId }, replace: true })
+    }
+  }, [currentDeckId])
 
   useEffect(() => {
     void loadCardCollection({ data: { id: currentDeckId } })
@@ -176,6 +197,40 @@ function DecksPage() {
     }
   }
 
+  async function handleRenameDeck(id: string) {
+    const newName = window.prompt('New name for this deck:', id)
+    if (!newName || newName.trim() === '' || newName.trim() === id) return
+    try {
+      const result = await renameCardCollection({
+        data: { id, newName: newName.trim() },
+      })
+      if (id === currentDeckId) setCurrentDeckId(result.id)
+      await refreshDecks()
+      setPersistenceStatus(`Renamed deck to "${result.id}".`)
+    } catch (renameError) {
+      setPersistenceStatus(
+        renameError instanceof Error
+          ? renameError.message
+          : 'Could not rename the deck.',
+      )
+    }
+  }
+
+  async function handleDuplicateDeck(id: string) {
+    try {
+      const result = await duplicateCardCollection({ data: { id } })
+      await refreshDecks()
+      setCurrentDeckId(result.id)
+      setPersistenceStatus(`Duplicated deck as "${result.id}".`)
+    } catch (duplicateError) {
+      setPersistenceStatus(
+        duplicateError instanceof Error
+          ? duplicateError.message
+          : 'Could not duplicate the deck.',
+      )
+    }
+  }
+
   async function handleExportApkg() {
     setExporting(true)
     setExportStatus('Building APKG export...')
@@ -240,6 +295,22 @@ function DecksPage() {
                   <span className="deck-list-meta">
                     {deck.card_count} cards
                   </span>
+                </button>
+                <button
+                  aria-label={`Rename deck ${deck.id}`}
+                  className="deck-list-action"
+                  onClick={() => handleRenameDeck(deck.id)}
+                  type="button"
+                >
+                  ✎
+                </button>
+                <button
+                  aria-label={`Duplicate deck ${deck.id}`}
+                  className="deck-list-action"
+                  onClick={() => handleDuplicateDeck(deck.id)}
+                  type="button"
+                >
+                  ⧉
                 </button>
                 <button
                   aria-label={`Delete deck ${deck.id}`}

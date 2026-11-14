@@ -96,6 +96,26 @@ export function deleteCollectionWithFastApi(id: string) {
   )
 }
 
+export function renameCollectionWithFastApi(id: string, newName: string) {
+  return request<{ id: string }>(
+    `/api/v1/collections/${encodeURIComponent(id)}/rename`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ new_name: newName }),
+    },
+  )
+}
+
+export function duplicateCollectionWithFastApi(id: string, newName?: string) {
+  return request<{ id: string }>(
+    `/api/v1/collections/${encodeURIComponent(id)}/duplicate`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ new_name: newName ?? '' }),
+    },
+  )
+}
+
 export async function extractUrlWithFastApi(url: string) {
   const result = await request<{ text: string }>('/api/v1/sources/url', {
     method: 'POST',
